@@ -46,6 +46,9 @@ class ImpState(State):
             return {"name": self.name, "value": True}
         return {"name": self.name, "value": False}
 
+    def get(self):
+        return {"name": self.name, "value": self.__value}
+
 def control_function(state: State, func):
     def wrapper(*args, **kwargs):
         result = func(state, *args, **kwargs)
