@@ -25,11 +25,25 @@ class State:
         return self.get()
     
     def get(self):
-        return {"name": self.name, "value": self.__value, "text": {1: "Свет включен", 0: "Свет выключен"}[self.__value]}
+        return {"name": self.name, "value": self.__value, "text": {1: "Свет включен", 0: "Светы нету"}[self.__value]}
     
     def set(self, a: object):
         self.__value = a
         return self.get()
+
+class ImpState(State):
+    def __init__(self, name: str):
+        self.__value = False
+    
+    def set(self):
+        self.__value = True
+        return {"name": self.name, "value": self.__value}
+    
+    def check(self):
+        if self.__value == True:
+            self.__value = False
+            return {"name": self.name, "value": True}
+        return {"name": self.name, "value": False}
 
 def control_function(state: State, func):
     def wrapper(*args, **kwargs):
