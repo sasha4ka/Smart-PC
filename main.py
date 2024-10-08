@@ -12,25 +12,28 @@ class State:
         self.__value = default_value
 
     def toggle(self):
-        if not isinstance(self.__value, bool): return
-        self.__value = not self.__value
-        return {}
+        if isinstance(self.__value, bool):
+            self.__value = not self.__value
+        elif isinstance(self.__value, int):
+            if self.__value == 1: self.__value = 0
+            elif self.__value == 0: self.__value = 1
+        return self.get()
     
     def inc(self, a: int):
         if not isinstance(self.__value, int): return
         self.__value += a
-        return {}
+        return self.get()
     
     def get(self):
         return {"name": self.name, "value": self.__value}
     
     def set(self, a: object):
         self.__value = a
-        return {}
+        return self.get()
 
 def control_function(state: State, func):
-    def wrapper(*args):
-        result = func(state, *args)
+    def wrapper(*args, **kwargs):
+        result = func(state, *args, **kwargs)
         base_handler()
         return result
     wrapper.__name__ = str(id(func))
@@ -45,9 +48,10 @@ class ControlUnit:
         app.add_url_rule(self.path, view_func=self.function)
 
 #Add your rules here:
-states.append(led_state := State("LED", False))
+states.append(led_state := State("LED", 0))
 control.append(ControlUnit("/led", led_state, lambda state: state.get()))
 control.append(ControlUnit("/led/toggle", led_state, lambda state: state.toggle()))
+control.append(ControlUnit("/led/set/<int:value>", led_state, lambda state, value: state.set(value)))
 #end
 
 app.run("127.0.0.1", 6734, debug=True)
