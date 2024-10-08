@@ -15,8 +15,8 @@ class State:
         if isinstance(self.__value, bool):
             self.__value = not self.__value
         elif isinstance(self.__value, int):
-            if self.__value == 1: self.__value = 0
-            elif self.__value == 0: self.__value = 1
+            if self.__value > 0: self.__value = 0
+            elif self.__value == 0: self.__value = 100
         return self.get()
     
     def inc(self, a: int):
@@ -25,7 +25,7 @@ class State:
         return self.get()
     
     def get(self):
-        return {"name": self.name, "value": self.__value, "text": {1: "Свет включен", 0: "Светы нету"}[self.__value]}
+        return {"name": self.name, "value": self.__value}
     
     def set(self, a: object):
         self.__value = a
@@ -75,4 +75,4 @@ control.append(ControlUnit("/pc/start", imp_state, lambda i_state: i_state.set()
 control.append(ControlUnit("/pc/check", imp_state, lambda i_state: i_state.check()))
 #end
 
-app.run("0.0.0.0", 6734, debug=True)
+app.run("0.0.0.0", 6734)
