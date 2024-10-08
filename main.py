@@ -25,7 +25,7 @@ class State:
         return self.get()
     
     def get(self):
-        return {"name": self.name, "value": self.__value}
+        return {"name": self.name, "value": self.__value, "text": {1: "Свет включен", 0: "Свет выключен"}[self.__value]}
     
     def set(self, a: object):
         self.__value = a
@@ -51,7 +51,7 @@ class ControlUnit:
 states.append(led_state := State("LED", 0))
 control.append(ControlUnit("/led", led_state, lambda state: state.get()))
 control.append(ControlUnit("/led/toggle", led_state, lambda state: state.toggle()))
-control.append(ControlUnit("/led/set/<int:value>", led_state, lambda state, value: state.set(value)))
+control.append(ControlUnit("/led/set<int:value>", led_state, lambda state, value: state.set(value)))
 #end
 
-app.run("127.0.0.1", 6734, debug=True)
+app.run("0.0.0.0", 6734, debug=True)
