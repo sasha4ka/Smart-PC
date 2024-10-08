@@ -63,9 +63,12 @@ class ControlUnit:
 
 #Add your rules here:
 states.append(led_state := State("LED", 0))
+states.append(imp_state := ImpState("PC"))
 control.append(ControlUnit("/led", led_state, lambda state: state.get()))
 control.append(ControlUnit("/led/toggle", led_state, lambda state: state.toggle()))
 control.append(ControlUnit("/led/set<int:value>", led_state, lambda state, value: state.set(value)))
+control.append(ControlUnit("/pc/start", imp_state, lambda i_state: i_state.set()))
+control.append(ControlUnit("/pc/check", imp_state, lambda i_state: i_state.check()))
 #end
 
 app.run("0.0.0.0", 6734, debug=True)
