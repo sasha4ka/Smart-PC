@@ -33,6 +33,7 @@ class State:
 
 class ImpState(State):
     def __init__(self, name: str):
+        self.name = name
         self.__value = False
     
     def set(self):
