@@ -15,8 +15,8 @@ class State:
         if isinstance(self.__value, bool):
             self.__value = not self.__value
         elif isinstance(self.__value, int):
-            if self.__value > 0: self.__value = 0
-            elif self.__value == 0: self.__value = 100
+            if self.__value == 0: self.__value = 1
+            elif self.__value == 1: self.__value = 0
         return self.get()
     
     def inc(self, a: int):
