@@ -3,6 +3,7 @@ app = Flask(__name__)
 
 states = []
 control = []
+tokens = {}
 
 base_handler = lambda: print("\n".join(map(lambda state: f"{state.name}\t\t{state.get()['value']}", states)))
 
@@ -42,33 +43,52 @@ class ImpState(State):
     def get(self):
         return {"name": self.name, "value": self.__value}
 
-def control_function(state: State, func):
+#function example:          lambda state, value: state.set(value)
+def control_function(state: State, func, unit):
     def wrapper(*args, **kwargs):
+        if kwargs["token"] not in tokens.keys(): return {"text":"not authorizated"}
+        if not tokens[kwargs["token"]].match(unit): return {"text":"not access"}
+        kwargs.pop("token")
         result = func(state, *args, **kwargs)
         base_handler()
         return result
     wrapper.__name__ = str(id(func))
     return wrapper
 
-#function example:          lambda state, value: state.set(value)
 class ControlUnit:
     def __init__(self, path: str, state: State, function):
-        self.path = path
+        self.path = path + "/<string:token>"
         self.state = state
-        self.function = control_function(self.state, function)
+        self.function = control_function(self.state, function, self)
         app.add_url_rule(self.path, view_func=self.function)
 
+class Token:
+    def __init__(self, text: str, units: list[ControlUnit]):
+        self.text = text
+        self.units = units
+    
+    def match(self, unit):
+        if unit in self.units:
+            return True
+        return False
+
 #Add your rules here:
+group1 = []
+group_voice = []
 states.append(led_state := State("LED", 0))
 states.append(start_state := ImpState("PC_start"))
 states.append(halt_state := ImpState("PC_halt"))
-control.append(ControlUnit("/led", led_state, lambda state: state.get()))
-control.append(ControlUnit("/led/toggle", led_state, lambda state: state.toggle()))
-control.append(ControlUnit("/led/set<int:value>", led_state, lambda state, value: state.set(value)))
-control.append(ControlUnit("/pc-start/start", start_state, lambda i_state: i_state.set()))
-control.append(ControlUnit("/pc-halt/halt", halt_state, lambda i_state: i_state.set()))
-control.append(ControlUnit("/pc-start/check", start_state, lambda i_state: i_state.check()))
-control.append(ControlUnit("/pc-halt/check", halt_state, lambda i_state: i_state.check()))
+group_voice.append(ControlUnit("/led", led_state, lambda state: state.get()))
+group_voice.append(ControlUnit("/led/toggle", led_state, lambda state: state.toggle()))
+group_voice.append(ControlUnit("/led/set<int:value>", led_state, lambda state, value: state.set(value)))
+group_voice.append(ControlUnit("/pc-start/start", start_state, lambda i_state: i_state.set()))
+group_voice.append(ControlUnit("/pc-halt/halt", halt_state, lambda i_state: i_state.set()))
+group1.append(ControlUnit("/pc-start/check", start_state, lambda i_state: i_state.check()))
+group1.append(ControlUnit("/pc-halt/check", halt_state, lambda i_state: i_state.check()))
+control.extend(group1)
+control.extend(group_voice)
+tokens.update({"4ae48788aa9dad4dfa84ce9f822220c2": Token("4ae48788aa9dad4dfa84ce9f822220c2", group_voice)})      #Alice's token
+tokens.update({"4279f50441a1370ea8b5a0fabd686f2d": Token("4279f50441a1370ea8b5a0fabd686f2d", group1)})           #PC's token
 #end
 
-app.run("0.0.0.0", 6734)
+app.run("0.0.0.0", 6734, debug=True)
