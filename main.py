@@ -10,7 +10,6 @@ class State:
     def __init__(self, name: str, default_value: object):
         self.name = name
         self.__value = default_value
-
     def toggle(self):
         if isinstance(self.__value, bool):
             self.__value = not self.__value
@@ -18,15 +17,12 @@ class State:
             if self.__value == 0: self.__value = 1
             elif self.__value == 1: self.__value = 0
         return self.get()
-    
     def inc(self, a: int):
         if not isinstance(self.__value, int): return
         self.__value += a
         return self.get()
-    
     def get(self):
         return {"name": self.name, "value": self.__value}
-    
     def set(self, a: object):
         self.__value = a
         return self.get()
@@ -35,17 +31,14 @@ class ImpState(State):
     def __init__(self, name: str):
         self.name = name
         self.__value = False
-    
     def set(self):
         self.__value = True
         return {"name": self.name, "value": self.__value}
-    
     def check(self):
         if self.__value == True:
             self.__value = False
             return {"name": self.name, "value": True}
         return {"name": self.name, "value": False}
-
     def get(self):
         return {"name": self.name, "value": self.__value}
 
@@ -67,12 +60,15 @@ class ControlUnit:
 
 #Add your rules here:
 states.append(led_state := State("LED", 0))
-states.append(imp_state := ImpState("PC"))
+states.append(start_state := ImpState("PC_start"))
+states.append(halt_state := ImpState("PC_halt"))
 control.append(ControlUnit("/led", led_state, lambda state: state.get()))
 control.append(ControlUnit("/led/toggle", led_state, lambda state: state.toggle()))
 control.append(ControlUnit("/led/set<int:value>", led_state, lambda state, value: state.set(value)))
-control.append(ControlUnit("/pc/start", imp_state, lambda i_state: i_state.set()))
-control.append(ControlUnit("/pc/check", imp_state, lambda i_state: i_state.check()))
+control.append(ControlUnit("/pc-start/start", start_state, lambda i_state: i_state.set()))
+control.append(ControlUnit("/pc-halt/halt", halt_state, lambda i_state: i_state.set()))
+control.append(ControlUnit("/pc-start/check", start_state, lambda i_state: i_state.check()))
+control.append(ControlUnit("/pc-halt/check", halt_state, lambda i_state: i_state.check()))
 #end
 
 app.run("0.0.0.0", 6734)
