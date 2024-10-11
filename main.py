@@ -46,10 +46,14 @@ class ImpState(State):
 class PC:
     def __init__(self, name: str):
         self.__shutdown = False
+        self.__turned_on = True
     
     def set(self, state: str):
         if state == "shutdown":
             self.__shutdown = True
+            self.__turned_on = False
+        if state == "turnon":
+            self.__turned_on = True
         else:
             return {"text":"State not found"}
         return self.get()
@@ -60,7 +64,10 @@ class PC:
         return result
     
     def get(self): 
-        return {"name": "", "shutdown": self.__shutdown}
+        return {"name": self.name, "shutdown": self.__shutdown}
+    
+    def turned_on(self):
+        return {"name": self.name, "value": 1 if self.__turned_on else 0}
 
 #function example:          lambda state, value: state.set(value)
 def control_function(state: State, func, unit):
@@ -102,9 +109,9 @@ group_voice.append(ControlUnit("/led", led_state, lambda state: state.get()))
 group_voice.append(ControlUnit("/led/toggle", led_state, lambda state: state.toggle()))
 group_voice.append(ControlUnit("/led/set<int:value>", led_state, lambda state, value: state.set(value)))
 group_voice.append(ControlUnit("/pc/<string:param>/set", pc_state, lambda state, param: state.set(param)))
+group_voice.append(ControlUnit("/pc/state", pc_state, lambda state: state.turned_on()))
 
 pc_group.append(ControlUnit("/pc/<string:param>/check", pc_state, lambda state, param: state.check(param)))
-pc_group.append(ControlUnit("/pc", pc_state, lambda state: state.get()))
 
 control.extend(pc_group)
 control.extend(group_voice)
