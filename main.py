@@ -59,6 +59,9 @@ class PC:
             return {"text":"State not found"}
         return self.get()
     
+    def set_state(self, value: int):
+        self.__turned_on = not bool(value)
+
     def check(self, state: str):
         result = self.get()
         if state == "shutdown": self.__shutdown = False
@@ -109,10 +112,11 @@ group_voice = []
 group_voice.append(ControlUnit("/led", led_state, lambda state: state.get()))
 group_voice.append(ControlUnit("/led/toggle", led_state, lambda state: state.toggle()))
 group_voice.append(ControlUnit("/led/set<int:value>", led_state, lambda state, value: state.set(value)))
-group_voice.append(ControlUnit("/pc/<string:param>/set", pc_state, lambda state, param: state.set(param)))
-group_voice.append(ControlUnit("/pc/state", pc_state, lambda state: state.turned_on()))
+group_voice.append(ControlUnit("/pc/<string:param>/set", pc_state, lambda pc, param: pc.set(param)))
+group_voice.append(ControlUnit("/pc/state", pc_state, lambda pc: pc.turned_on()))
 
-pc_group.append(ControlUnit("/pc/<string:param>/check", pc_state, lambda state, param: state.check(param)))
+pc_group.append(ControlUnit("/pc/<string:param>/check", pc_state, lambda pc, param: pc.check(param)))
+pc_group.append(ControlUnit("/pc/state/set<int:value>", pc_state, lambda pc, value: pc.set_state(value)))
 
 control.extend(pc_group)
 control.extend(group_voice)
