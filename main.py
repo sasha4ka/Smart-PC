@@ -60,7 +60,7 @@ class PC:
         return self.get()
     
     def set_state(self, value: int):
-        self.__turned_on = not bool(value)
+        self.__turned_on = bool(value)
         return self.get()
 
     def check(self, state: str):
