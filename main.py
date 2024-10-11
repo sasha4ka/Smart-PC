@@ -61,6 +61,7 @@ class PC:
     
     def set_state(self, value: int):
         self.__turned_on = not bool(value)
+        return self.get()
 
     def check(self, state: str):
         result = self.get()
@@ -68,7 +69,7 @@ class PC:
         return result
     
     def get(self): 
-        return {"name": self.name, "shutdown": self.__shutdown}
+        return {"name": self.name, "turned_on": self.__turned_on, "shutdown": self.__shutdown}
     
     def turned_on(self):
         return {"name": self.name, "value": 1 if self.__turned_on else 0}
