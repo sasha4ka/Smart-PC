@@ -5,7 +5,7 @@ states = []
 control = []
 tokens = {}
 
-base_handler = lambda: print("\n".join(map(lambda state: f"{state.name}\t\t{state.get()['value']}", states)))
+base_handler = lambda: print("\n".join(map(lambda st: str(st.get()), states)))
 
 class State:
     def __init__(self, name: str, default_value: object):
@@ -43,6 +43,25 @@ class ImpState(State):
     def get(self):
         return {"name": self.name, "value": self.__value}
 
+class PC:
+    def __init__(self, name: str):
+        self.__shutdown = False
+    
+    def set(self, state: str):
+        if state == "shutdown":
+            self.__shutdown = True
+        else:
+            return {"text":"State not found"}
+        return self.get()
+    
+    def check(self, state: str):
+        result = self.get()
+        if state == "shutdown": self.__shutdown = False
+        return result
+    
+    def get(self): 
+        return {"name": "", "shutdown": self.__shutdown}
+
 #function example:          lambda state, value: state.set(value)
 def control_function(state: State, func, unit):
     def wrapper(*args, **kwargs):
@@ -73,22 +92,25 @@ class Token:
         return False
 
 #Add your rules here:
-group1 = []
-group_voice = []
 states.append(led_state := State("LED", 0))
-states.append(start_state := ImpState("PC_start"))
-states.append(halt_state := ImpState("PC_halt"))
+states.append(pc_state := PC("Home's pc"))
+
+pc_group = []
+group_voice = []
+
 group_voice.append(ControlUnit("/led", led_state, lambda state: state.get()))
 group_voice.append(ControlUnit("/led/toggle", led_state, lambda state: state.toggle()))
 group_voice.append(ControlUnit("/led/set<int:value>", led_state, lambda state, value: state.set(value)))
-group_voice.append(ControlUnit("/pc-start/start", start_state, lambda i_state: i_state.set()))
-group_voice.append(ControlUnit("/pc-halt/halt", halt_state, lambda i_state: i_state.set()))
-group1.append(ControlUnit("/pc-start/check", start_state, lambda i_state: i_state.check()))
-group1.append(ControlUnit("/pc-halt/check", halt_state, lambda i_state: i_state.check()))
-control.extend(group1)
+group_voice.append(ControlUnit("/pc/<string:param>/set", pc_state, lambda state, param: state.set(param)))
+
+pc_group.append(ControlUnit("/pc/<string:param>/check", pc_state, lambda state, param: state.check(param)))
+pc_group.append(ControlUnit("/pc", pc_state, lambda state: state.get()))
+
+control.extend(pc_group)
 control.extend(group_voice)
+
 tokens.update({"4ae48788aa9dad4dfa84ce9f822220c2": Token("4ae48788aa9dad4dfa84ce9f822220c2", group_voice)})      #Alice's token
-tokens.update({"4279f50441a1370ea8b5a0fabd686f2d": Token("4279f50441a1370ea8b5a0fabd686f2d", group1)})           #PC's token
+tokens.update({"4279f50441a1370ea8b5a0fabd686f2d": Token("4279f50441a1370ea8b5a0fabd686f2d", pc_group)})           #PC's token
 #end
 
 app.run("0.0.0.0", 6734, debug=True)
