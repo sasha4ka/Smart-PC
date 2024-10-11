@@ -47,6 +47,7 @@ class PC:
     def __init__(self, name: str):
         self.__shutdown = False
         self.__turned_on = True
+        self.name = name
     
     def set(self, state: str):
         if state == "shutdown":
