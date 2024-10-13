@@ -109,12 +109,17 @@ states.append(pc_state := PC("Home's pc"))
 
 pc_group = []
 group_voice = []
+esp_group = []
 
 group_voice.append(ControlUnit("/led", led_state, lambda state: state.get()))
 group_voice.append(ControlUnit("/led/toggle", led_state, lambda state: state.toggle()))
 group_voice.append(ControlUnit("/led/set<int:value>", led_state, lambda state, value: state.set(value)))
 group_voice.append(ControlUnit("/pc/<string:param>/set", pc_state, lambda pc, param: pc.set(param)))
 group_voice.append(ControlUnit("/pc/state", pc_state, lambda pc: pc.turned_on()))
+
+esp_group.append(ControlUnit("/str/led", led_state, lambda state: state.get()["value"]))
+esp_group.append(ControlUnit("/str/led/toggle", led_state, lambda state: state.toggle()))
+esp_group.append(ControlUnit("/str/led/set<int:value>", led_state, lambda state, value: state.set(value)))
 
 pc_group.append(ControlUnit("/pc/<string:param>/check", pc_state, lambda pc, param: pc.check(param)))
 pc_group.append(ControlUnit("/pc/state/set<int:value>", pc_state, lambda pc, value: pc.set_state(value)))
@@ -124,6 +129,7 @@ control.extend(group_voice)
 
 tokens.update({"4ae48788aa9dad4dfa84ce9f822220c2": Token("4ae48788aa9dad4dfa84ce9f822220c2", group_voice)})      #Alice's token
 tokens.update({"4279f50441a1370ea8b5a0fabd686f2d": Token("4279f50441a1370ea8b5a0fabd686f2d", pc_group)})           #PC's token
+tokens.update({"843447436771e832c9c70b07ef2daaca": Token("843447436771e832c9c70b07ef2daaca", esp_group)})
 #end
 
 app.run("0.0.0.0", 6734, debug=True)
