@@ -74,6 +74,42 @@ class PC:
     def turned_on(self):
         return {"name": self.name, "value": 1 if self.__turned_on else 0}
 
+class LED:
+    def __init__(self, name):
+        self.name = name
+        self.__enable = False
+        self.__disable = False
+        self.value = False
+    
+    def set(self, value):
+        if value == 1:
+            self.__enable = True
+            self.value = True
+        elif value == 0:
+            self.__disable = True
+            self.value = False
+        return self.get()
+    
+    def toggle(self):
+        if self.value:
+            self.__disable = True
+        else:
+            self.__enable = True
+        self.value = not self.value
+        return self.get()
+    
+    def sync(self):
+        self.value = not self.value
+        return self.get()
+    
+    def get(self): 
+        return {"name": self.name, "value": self.value}
+    
+    def get_str(self):
+        result = f"{'1' if self.__enable else '0'}{'1' if self.__disable else '0'}"
+        self.__enable = self.__disable = False
+        return result
+
 #function example:          lambda state, value: state.set(value)
 def control_function(state: State, func, unit):
     def wrapper(*args, **kwargs):
@@ -81,7 +117,6 @@ def control_function(state: State, func, unit):
         if not tokens[kwargs["token"]].match(unit): return {"text":"not access"}
         kwargs.pop("token")
         result = func(state, *args, **kwargs)
-        print(result)
         base_handler()
         return result
     wrapper.__name__ = str(id(func))
@@ -105,22 +140,22 @@ class Token:
         return False
 
 #Add your rules here:
-states.append(led_state := State("LED", 0))
+states.append(led_state := LED("LED"))
 states.append(pc_state := PC("Home's pc"))
 
 pc_group = []
 group_voice = []
 esp_group = []
 
-group_voice.append(ControlUnit("/led", led_state, lambda state: state.get()))
-group_voice.append(ControlUnit("/led/toggle", led_state, lambda state: state.toggle()))
-group_voice.append(ControlUnit("/led/set<int:value>", led_state, lambda state, value: state.set(value)))
+group_voice.append(ControlUnit("/led", led_state, lambda led: led.get()))
+group_voice.append(ControlUnit("/led/toggle", led_state, lambda led: led.toggle()))
+group_voice.append(ControlUnit("/led/set<int:value>", led_state, lambda led, value: led.set(value)))
 group_voice.append(ControlUnit("/pc/<string:param>/set", pc_state, lambda pc, param: pc.set(param)))
 group_voice.append(ControlUnit("/pc/state", pc_state, lambda pc: pc.turned_on()))
 
-esp_group.append(ControlUnit("/str/led", led_state, lambda state: str(state.get()["value"])))
-esp_group.append(ControlUnit("/str/led/toggle", led_state, lambda state: str(state.toggle()["value"])))
-esp_group.append(ControlUnit("/str/led/set<int:value>", led_state, lambda state, value: str(state.set(value)["value"])))
+esp_group.append(ControlUnit("/str/led", led_state, lambda led: led.get_str()))
+esp_group.append(ControlUnit("/str/led/toggle", led_state, lambda led: led.toggle()))
+esp_group.append(ControlUnit("/str/led/set<int:value>", led_state, lambda led, value: led.set(value)))
 
 pc_group.append(ControlUnit("/pc/<string:param>/check", pc_state, lambda pc, param: pc.check(param)))
 pc_group.append(ControlUnit("/pc/state/set<int:value>", pc_state, lambda pc, value: pc.set_state(value)))
