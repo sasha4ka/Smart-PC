@@ -45,34 +45,36 @@ class ImpState(State):
 
 class PC:
     def __init__(self, name: str):
-        self.__shutdown = False
-        self.__turned_on = True
+        self.__enable = False
+        self.__disable = False
+        self.value = False
         self.name = name
     
-    def set(self, state: str):
-        if state == "shutdown":
-            self.__shutdown = True
-            self.__turned_on = False
-        if state == "turnon":
-            self.__turned_on = True
-        else:
-            return {"text":"State not found"}
+    def set(self, value):
+        if value == 1:
+            self.__enable = True
+        if value == 0:
+            self.__disable = True
+            self.value = False
         return self.get()
     
-    def set_state(self, value: int):
-        self.__turned_on = bool(value)
-        return self.get()
-
-    def check(self, state: str):
+    def check_enable(self):
         result = self.get()
-        if state == "shutdown": self.__shutdown = False
+        self.__enable = False
         return result
     
-    def get(self): 
-        return {"name": self.name, "turned_on": self.__turned_on, "shutdown": self.__shutdown}
+    def check_disable(self):
+        result = self.get()
+        self.__disable = False
+        return result
     
-    def turned_on(self):
-        return {"name": self.name, "value": 1 if self.__turned_on else 0}
+    def check(self):
+        result = self.get()
+        self.__disable = self.__enable = False
+        return result
+
+    def get(self): 
+        return {"name": self.name, "value": self.value, "disable": self.__disable, "enable": self.__enable}
 
 class LED:
     def __init__(self, name):
@@ -150,15 +152,17 @@ esp_group = []
 group_voice.append(ControlUnit("/led", led_state, lambda led: led.get()))
 group_voice.append(ControlUnit("/led/toggle", led_state, lambda led: led.toggle()))
 group_voice.append(ControlUnit("/led/set<int:value>", led_state, lambda led, value: led.set(value)))
-group_voice.append(ControlUnit("/pc/<string:param>/set", pc_state, lambda pc, param: pc.set(param)))
-group_voice.append(ControlUnit("/pc/state", pc_state, lambda pc: pc.turned_on()))
+group_voice.append(a:=ControlUnit("/pc/set<int:value>", pc_state, lambda pc, value: pc.set(value)))
+group_voice.append(ControlUnit("/pc", pc_state, lambda pc: pc.get()))
 
 esp_group.append(ControlUnit("/str/led", led_state, lambda led: led.get_str()))
 esp_group.append(ControlUnit("/str/led/toggle", led_state, lambda led: led.toggle()))
 esp_group.append(ControlUnit("/str/led/set<int:value>", led_state, lambda led, value: led.set(value)))
 
-pc_group.append(ControlUnit("/pc/<string:param>/check", pc_state, lambda pc, param: pc.check(param)))
-pc_group.append(ControlUnit("/pc/state/set<int:value>", pc_state, lambda pc, value: pc.set_state(value)))
+pc_group.append(ControlUnit("/pc/check/enable", pc_state, lambda pc: pc.check_enable()))
+pc_group.append(ControlUnit("/pc/check/disable", pc_state, lambda pc: pc.check_disable()))
+pc_group.append(ControlUnit("/pc/check", pc_state, lambda pc: pc.check()))
+pc_group.append(a)
 
 control.extend(pc_group)
 control.extend(group_voice)
