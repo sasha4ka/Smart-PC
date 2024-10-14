@@ -78,6 +78,7 @@ class PC:
     
     def sync(self, value: int):
         self.value = bool(value)
+        return self.get()
 
 class LED:
     def __init__(self, name):
