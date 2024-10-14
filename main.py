@@ -75,6 +75,9 @@ class PC:
 
     def get(self): 
         return {"name": self.name, "value": self.value, "disable": self.__disable, "enable": self.__enable}
+    
+    def sync(self, value: int):
+        self.value = bool(value)
 
 class LED:
     def __init__(self, name):
@@ -162,14 +165,15 @@ esp_group.append(ControlUnit("/str/led/set<int:value>", led_state, lambda led, v
 pc_group.append(ControlUnit("/pc/check/enable", pc_state, lambda pc: pc.check_enable()))
 pc_group.append(ControlUnit("/pc/check/disable", pc_state, lambda pc: pc.check_disable()))
 pc_group.append(ControlUnit("/pc/check", pc_state, lambda pc: pc.check()))
+pc_group.append(ControlUnit("/pc/sync<int:value>", pc_state, lambda pc, value: pc.sync(value)))
 pc_group.append(a)
 
 control.extend(pc_group)
 control.extend(group_voice)
 
-tokens.update({"4ae48788aa9dad4dfa84ce9f822220c2": Token("4ae48788aa9dad4dfa84ce9f822220c2", group_voice)})      #Alice's token
+tokens.update({"4ae48788aa9dad4dfa84ce9f822220c2": Token("4ae48788aa9dad4dfa84ce9f822220c2", group_voice)})        #Alice's token
 tokens.update({"4279f50441a1370ea8b5a0fabd686f2d": Token("4279f50441a1370ea8b5a0fabd686f2d", pc_group)})           #PC's token
-tokens.update({"843447436771e832c9c70b07ef2daaca": Token("843447436771e832c9c70b07ef2daaca", esp_group)})       #esp's token
+tokens.update({"843447436771e832c9c70b07ef2daaca": Token("843447436771e832c9c70b07ef2daaca", esp_group)})          #esp's token
 #end
 
 app.run("0.0.0.0", 6734, debug=True)
